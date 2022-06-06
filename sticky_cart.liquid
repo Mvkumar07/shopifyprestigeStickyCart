@@ -1,0 +1,85 @@
+{% if template contains 'product' %}
+<div id="vapp-addtocart-sticky">
+  <form action="/cart/add" method="post" class="sticky-cart">
+    {% assign current = product.selected_or_first_available_variant %}
+    <input type="hidden" name="id" value="{{ current.id }}">
+    <input type="number" name="quantity" value="1" min="1">
+    <button type="submit" class="stick__AddToCart" data-action="add-to-cart-sticky">ADD TO CART</button>
+  </form>
+</div>
+<style>
+  #vapp-addtocart-sticky{
+    display: flex;
+    justify-content: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 9999;
+    background: #fff;
+    padding-top: 5px;
+    border-top: 1px solid #e2e2e2;
+  }
+  #vapp-addtocart-sticky select,
+  #vapp-addtocart-sticky input,
+  #vapp-addtocart-sticky button{
+    height:40px;
+    margin:0 5px;
+    vertical-align: middle;
+  }
+  #vapp-addtocart-sticky input{
+    width: 60px;
+    text-align: center;
+  }
+  #vapp-addtocart-sticky button{
+    padding:0 40px;
+    background: #f5e464;
+  }
+</style>
+{% endif %}
+<script>
+const formElem = document.querySelector('.sticky-cart');
+formElem.addEventListener('submit', (e) => {
+  e.preventDefault();
+  new FormData(formElem);
+});
+formElem.addEventListener('formdata', (e) => {
+  let data = e.formData;
+  var id = '';
+  var loop = 1;
+  for (var value of data.values()) {    
+    if(loop == 1){
+      id = value;
+    }
+    loop++;
+  }
+  
+   let formData = {
+     'items': [{
+      'id': id,
+      'quantity': 1
+      }]
+    };
+    fetch('/cart/add.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formData)
+    })
+    .then(response => {
+      document.dispatchEvent(new CustomEvent('theme:loading:end'));
+     document.documentElement.dispatchEvent(new CustomEvent('product:added', {
+              bubbles: true,
+              detail: {
+                variant: id,
+                quantity: 1
+              }
+            }));
+      return response.json();
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+    }); 
+	
+});
+</script>
